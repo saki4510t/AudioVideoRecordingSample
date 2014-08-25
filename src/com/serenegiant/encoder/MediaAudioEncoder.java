@@ -38,7 +38,7 @@ public class MediaAudioEncoder extends MediaEncoder {
 	private static final String TAG = "MediaAudioEncoder";
 
 	private static final String MIME_TYPE = "audio/mp4a-latm";
-    private static final int SAMPLE_RATE = 22050;	// 44.1[KHz] is only setting guaranteed to be available on all devices.
+    private static final int SAMPLE_RATE = 44100;	// 44.1[KHz] is only setting guaranteed to be available on all devices.
     private static final int BIT_RATE = 64000;
     
     private AudioThread mAudioThread = null;
