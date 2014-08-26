@@ -93,8 +93,9 @@ public final class RenderHandler extends Handler {
 		case MSG_RENDER_QUIT:
 			Looper.myLooper().quit();
 			break;
+		default:
+			super.handleMessage(msg);
 		}
-		super.handleMessage(msg);
 	}
 
 //********************************************************************************
