@@ -64,7 +64,7 @@ public class CameraFragment extends Fragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 		mCameraView = (CameraGLView)rootView.findViewById(R.id.cameraView);
-		mCameraView.setAspectRatio(640 / 480);
+		mCameraView.setAspectRatio(640 / 480.f);
 		mRecordButton = (ImageButton)rootView.findViewById(R.id.record_button);
 		mRecordButton.setOnClickListener(mOnClickListener);
 		return rootView;

@@ -24,6 +24,7 @@ package com.serenegiant.audiovideosample;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -106,22 +107,24 @@ public final class CameraGLView extends GLSurfaceView {
 	 * <code>aspect ratio = width / height</code>.
 	 */
 	public void setAspectRatio(double aspectRatio) {
+		if (DEBUG) Log.v(TAG, "setAspectRatio:");
 		if (aspectRatio < 0) {
 			throw new IllegalArgumentException();
 		}
 		if (mRequestedAspect != aspectRatio) {
 			mRequestedAspect = aspectRatio;
-			requestLayout();
+//			requestLayout();
 		}
 	}
 
 	/**
 	 * measure view size with keeping aspect ration
 	 */
-	@Override
+/*	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
 		if (mRequestedAspect > 0) {
+			if (DEBUG) Log.v(TAG, "onMeasure:");
 			int initialWidth = MeasureSpec.getSize(widthMeasureSpec);
 			int initialHeight = MeasureSpec.getSize(heightMeasureSpec);
 
@@ -150,7 +153,7 @@ public final class CameraGLView extends GLSurfaceView {
 		}
 
 		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-	}
+	} */
 
 	public SurfaceTexture getSurfaceTexture() {
 		if (DEBUG) Log.v(TAG, "getSurfaceTexture:");
@@ -188,7 +191,7 @@ public final class CameraGLView extends GLSurfaceView {
 
 //********************************************************************************
 //********************************************************************************
-	private synchronized void startPreview(int width, int height) {
+	private synchronized void startPreview(final int width, final int height) {
 		if (mCameraHandler == null) {
 			final CameraThread thread = new CameraThread(this);
 			thread.setName("Camera Thread");
@@ -197,7 +200,7 @@ public final class CameraGLView extends GLSurfaceView {
 		}
 		mCameraHandler.startPreview(width, height);
 	}
-	
+
 	/**
 	 * GLSurfaceViewのRenderer
 	 */
@@ -213,6 +216,7 @@ public final class CameraGLView extends GLSurfaceView {
 		private MediaVideoEncoder mVideoEncoder;
 
 		public CameraSurfaceRenderer(CameraGLView parent) {
+			if (DEBUG) Log.v(TAG, "CameraSurfaceRenderer:");
 			mWeakParent = new WeakReference<CameraGLView>(parent);
 		}
 
@@ -246,11 +250,30 @@ public final class CameraGLView extends GLSurfaceView {
 			if ((width == 0) || (height == 0)) return;
 			// set Viewport to draw whole view
 			GLES20.glViewport(0, 0, width, height);
+			GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 			final CameraGLView parent = mWeakParent.get();
-			if (parent != null)
-				parent.startPreview(width, height);
+			if (parent != null) {
+				final float req = (float)parent.mRequestedAspect;
+				final float r = width / (float)height;
+				int w, h, temp;
+				if (r > req) {
+					// if view is wider than camera image, calc width of drawing area based on view height
+					h = 0;
+					temp = (int)(req * height);
+					w = (width - temp) / 2;
+					width = temp;
+				} else {
+					// if view is higher than camera image, calc height of drawing area based on view width
+					w = 0;
+					temp = (int)(width / req);
+					h = (height - temp) / 2;
+					height = temp;
+				}
+				// set viewport to draw keeping aspect ration of camera image
+				GLES20.glViewport(w, h, width, height);
+			}
+			parent.startPreview(width, height);
 		}
-
 		/**
 		 * when GLSurface context is soon destroyed
 		 * this method should be called from CameraGLView#surfaceDestroyed
@@ -419,6 +442,11 @@ public final class CameraGLView extends GLSurfaceView {
 				try {
 					mCamera = Camera.open(0);
 					final Camera.Parameters params = mCamera.getParameters();
+					// let's try fastest frame rate. You will get near 60fps, but your device become hot.
+					final List<int[]> supportedFpsRange = params.getSupportedPreviewFpsRange();
+					final int[] max_fps = supportedFpsRange.get(supportedFpsRange.size() - 1);
+					params.setPreviewFpsRange(max_fps[0], max_fps[1]);
+					params.setRecordingHint(true);
 					// request preview size
 					// this is a sample project and just use fixed value
 					params.setPreviewSize(640, 480);
