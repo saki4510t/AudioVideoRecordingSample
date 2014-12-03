@@ -34,7 +34,7 @@ import android.media.MediaRecorder;
 import android.util.Log;
 
 public class MediaAudioEncoder extends MediaEncoder {
-	private static final boolean DEBUG = true;	// TODO set false on release
+	private static final boolean DEBUG = false;	// TODO set false on release
 	private static final String TAG = "MediaAudioEncoder";
 
 	private static final String MIME_TYPE = "audio/mp4a-latm";
@@ -104,6 +104,7 @@ public class MediaAudioEncoder extends MediaEncoder {
     private class AudioThread extends Thread {
     	@Override
     	public void run() {
+//    		android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
             final int buf_sz = AudioRecord.getMinBufferSize(
             	SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT) * 4;
             final AudioRecord audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,

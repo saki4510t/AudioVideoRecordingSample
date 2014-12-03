@@ -40,7 +40,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 
 public class CameraFragment extends Fragment {
-	private static final boolean DEBUG = true;	// TODO set false on release
+	private static final boolean DEBUG = false;	// TODO set false on release
 	private static final String TAG = "CameraFragment";
 	
 	/**
@@ -64,7 +64,7 @@ public class CameraFragment extends Fragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 		mCameraView = (CameraGLView)rootView.findViewById(R.id.cameraView);
-		mCameraView.setAspectRatio(640 / 480.f);
+		mCameraView.setAspectRatio(1280 / 720.f);
 		mRecordButton = (ImageButton)rootView.findViewById(R.id.record_button);
 		mRecordButton.setOnClickListener(mOnClickListener);
 		return rootView;

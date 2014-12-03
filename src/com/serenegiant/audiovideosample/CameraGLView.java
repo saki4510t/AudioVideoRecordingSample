@@ -35,6 +35,7 @@ import com.serenegiant.glutils.GLDrawer2D;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.hardware.Camera.Size;
 import android.opengl.EGL14;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -53,7 +54,7 @@ import android.view.WindowManager;
  */
 public final class CameraGLView extends GLSurfaceView {
 
-	private static final boolean DEBUG = true; // TODO set false on release
+	private static final boolean DEBUG = false; // TODO set false on release
 	private static final String TAG = "CameraGLView";
 
 	private CameraSurfaceRenderer mRenderer;
@@ -75,9 +76,9 @@ public final class CameraGLView extends GLSurfaceView {
 		mRenderer = new CameraSurfaceRenderer(this);
 		setEGLContextClientVersion(2);	// GLES 2.0, API >= 8
 		setRenderer(mRenderer);
-		// the frequency of refreshing of camera preview is at most 15 fps
+/*		// the frequency of refreshing of camera preview is at most 15 fps
 		// and RENDERMODE_WHEN_DIRTY is better to reduce power consumption
-		setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+		setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY); */
 	}
 
 	@Override
@@ -113,6 +114,12 @@ public final class CameraGLView extends GLSurfaceView {
 		}
 		if (mRequestedAspect != aspectRatio) {
 			mRequestedAspect = aspectRatio;
+			this.queueEvent(new Runnable() {
+				@Override
+				public void run() {
+					mRenderer.updateViewport();
+				}
+			});
 //			requestLayout();
 		}
 	}
@@ -248,32 +255,13 @@ public final class CameraGLView extends GLSurfaceView {
 			if (DEBUG) Log.v(TAG, "onSurfaceChanged:");
 			// if at least with or height is zero, initialization of this view is still progress.
 			if ((width == 0) || (height == 0)) return;
-			// set Viewport to draw whole view
-			GLES20.glViewport(0, 0, width, height);
-			GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+			updateViewport();
 			final CameraGLView parent = mWeakParent.get();
 			if (parent != null) {
-				final float req = (float)parent.mRequestedAspect;
-				final float r = width / (float)height;
-				int w, h, temp;
-				if (r > req) {
-					// if view is wider than camera image, calc width of drawing area based on view height
-					h = 0;
-					temp = (int)(req * height);
-					w = (width - temp) / 2;
-					width = temp;
-				} else {
-					// if view is higher than camera image, calc height of drawing area based on view width
-					w = 0;
-					temp = (int)(width / req);
-					h = (height - temp) / 2;
-					height = temp;
-				}
-				// set viewport to draw keeping aspect ration of camera image
-				GLES20.glViewport(w, h, width, height);
+				parent.startPreview(width, height);
 			}
-			parent.startPreview(width, height);
 		}
+
 		/**
 		 * when GLSurface context is soon destroyed
 		 * this method should be called from CameraGLView#surfaceDestroyed
@@ -294,6 +282,37 @@ public final class CameraGLView extends GLSurfaceView {
 			GLDrawer2D.deleteTex(hTex);
 		}
 
+		private final void updateViewport() {
+			// set Viewport to draw whole view
+			final CameraGLView parent = mWeakParent.get();
+			if (parent != null) {
+				int width = parent.getWidth();
+				int height = parent.getHeight();
+				GLES20.glViewport(0, 0, width, height);
+				GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+				final float req = (float)parent.mRequestedAspect;
+				final float r = width / (float)height;
+				int w, h, temp;
+				if (r > req) {
+					// if view is wider than camera image, calc width of drawing area based on view height
+					h = 0;
+					temp = (int)(req * height);
+					w = (width - temp) / 2;
+					width = temp;
+				} else {
+					// if view is higher than camera image, calc height of drawing area based on view width
+					w = 0;
+					temp = (int)(width / req);
+					h = (height - temp) / 2;
+					height = temp;
+				}
+				// set viewport to draw keeping aspect ration of camera image
+				GLES20.glViewport(w, h, width, height);
+			}
+		}
+
+		private boolean requesrUpdateTex = false;
+		private boolean flip = true;
 		/**
 		 * drawing to GLSurface
 		 * we set renderMode to GLSurfaceView.RENDERMODE_WHEN_DIRTY,
@@ -304,25 +323,36 @@ public final class CameraGLView extends GLSurfaceView {
 		public void onDrawFrame(GL10 unused) {
 			GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
-			// update texture(came from camera)
-			mSTexture.updateTexImage();
-			// get texture matrix
-			mSTexture.getTransformMatrix(mStMatrix);
 			synchronized (this) {
-				if (mVideoEncoder != null) {
-					// notify to capturing thread that the camera frame is available.
-					mVideoEncoder.frameAvailableSoon(mStMatrix);
+				if (requesrUpdateTex) {
+					// update texture(came from camera)
+					mSTexture.updateTexImage();
+					// get texture matrix
+					mSTexture.getTransformMatrix(mStMatrix);
+					requesrUpdateTex = false;
 				}
 			}
 			// draw to preview screen
 			mDrawer.draw(hTex, mStMatrix);
+			flip = !flip;
+			if (flip) {	// ~30fps
+				synchronized (this) {
+					if (mVideoEncoder != null) {
+						// notify to capturing thread that the camera frame is available.
+						mVideoEncoder.frameAvailableSoon(mStMatrix);
+					}
+				}
+			}
 		}
 
 		@Override
 		public void onFrameAvailable(SurfaceTexture st) {
-			final CameraGLView parent = mWeakParent.get();
-			if (parent != null)
-				parent.requestRender();
+			synchronized (this) {
+				requesrUpdateTex = true;
+			}
+//			final CameraGLView parent = mWeakParent.get();
+//			if (parent != null)
+//				parent.requestRender();
 		}
 	}
 
@@ -444,17 +474,28 @@ public final class CameraGLView extends GLSurfaceView {
 					final Camera.Parameters params = mCamera.getParameters();
 					// let's try fastest frame rate. You will get near 60fps, but your device become hot.
 					final List<int[]> supportedFpsRange = params.getSupportedPreviewFpsRange();
+//					final int n = supportedFpsRange != null ? supportedFpsRange.size() : 0;
+//					int[] range;
+//					for (int i = 0; i < n; i++) {
+//						range = supportedFpsRange.get(i);
+//						Log.i(TAG, String.format("supportedFpsRange(%d)=(%d,%d)", i, range[0], range[1]));
+//					}
 					final int[] max_fps = supportedFpsRange.get(supportedFpsRange.size() - 1);
+					Log.i(TAG, String.format("fps:%d-%d", max_fps[0], max_fps[1]));
 					params.setPreviewFpsRange(max_fps[0], max_fps[1]);
 					params.setRecordingHint(true);
 					// request preview size
 					// this is a sample project and just use fixed value
-					params.setPreviewSize(640, 480);
+					params.setPreviewSize(1280, 720);
+//					final Size sz = params.getPreferredPreviewSizeForVideo();
+//					if (sz != null)
+//						params.setPreviewSize(sz.width, sz.height);
 					// rotate camera preview according to the device orientation
 					setRotation(params);
 					mCamera.setParameters(params);
 					// get the actual preview size
 					final Camera.Size previewSize = mCamera.getParameters().getPreviewSize();
+					Log.i(TAG, String.format("previewSize(%d, %d)", previewSize.width, previewSize.height));
 					// adjust view size with keeping the aspect ration of camera preview.
 					// here is not a UI thread and we should request parent view to execute.
 					parent.post(new Runnable() {

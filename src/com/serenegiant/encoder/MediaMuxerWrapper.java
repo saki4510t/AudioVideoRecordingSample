@@ -37,7 +37,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 public class MediaMuxerWrapper {
-	private static final boolean DEBUG = true;	// TODO set false on release
+	private static final boolean DEBUG = false;	// TODO set false on release
 	private static final String TAG = "MediaMuxerWrapper";
 
 	private static final String DIR_NAME = "AVRecSample";

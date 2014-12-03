@@ -34,7 +34,7 @@ import android.os.Message;
 import android.util.Log;
 
 public abstract class MediaEncoder implements Runnable {
-	private static final boolean DEBUG = true;	// TODO set false on release
+	private static final boolean DEBUG = false;	// TODO set false on release
 	private static final String TAG = "MediaEncoder";
 
 	protected static final int TIMEOUT_USEC = 10000;	// 10[msec]   
@@ -113,6 +113,7 @@ public abstract class MediaEncoder implements Runnable {
             if (!mIsCapturing || mRequestStop) {
                 return false;
             }
+            mHandler.removeMessages(MSG_FRAME_AVAILABLE);
             mHandler.sendEmptyMessage(MSG_FRAME_AVAILABLE);
         }
         return true;
@@ -124,6 +125,7 @@ public abstract class MediaEncoder implements Runnable {
      */
 	@Override
 	public void run() {
+//		android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
         // create Looper and Handler to access to this thread
     	Looper.prepare();
         synchronized (mSync) {

@@ -35,16 +35,16 @@ import android.util.Log;
 import android.view.Surface;
 
 public class MediaVideoEncoder extends MediaEncoder {
-	private static final boolean DEBUG = true;	// TODO set false on release
+	private static final boolean DEBUG = false;	// TODO set false on release
 	private static final String TAG = "MediaVideoEncoder";
 
 	private static final String MIME_TYPE = "video/avc";
 	// parameters for recording
-	// VIDEO_WITH and VIDEO_HEIGHT should be same as the camera preview size.
-    private static final int VIDEO_WIDTH = 640;
-    private static final int VIDEO_HEIGHT = 480;
-    private static final int FRAME_RATE = 15;
-    private static final float BPP = 0.125f;
+	// VIDEO_WITH and VIDEO_HEIGHT are better to be same as the camera preview size.
+    private static final int VIDEO_WIDTH = 1280;
+    private static final int VIDEO_HEIGHT = 720;
+    private static final int FRAME_RATE = 25;
+    private static final float BPP = 0.25f;
  
     private RenderHandler mRenderHandler;
     private Surface mSurface;
