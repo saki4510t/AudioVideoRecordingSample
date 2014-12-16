@@ -29,13 +29,9 @@ import java.util.List;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import com.serenegiant.encoder.MediaVideoEncoder;
-import com.serenegiant.glutils.GLDrawer2D;
-
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import android.hardware.Camera.Size;
 import android.opengl.EGL14;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -49,6 +45,9 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
 
+import com.serenegiant.encoder.MediaVideoEncoder;
+import com.serenegiant.glutils.GLDrawer2D;
+
 /**
  * Sub class of GLSurfaceView to display camera preview and write video frame to capturing surface
  */
@@ -57,7 +56,7 @@ public final class CameraGLView extends GLSurfaceView {
 	private static final boolean DEBUG = false; // TODO set false on release
 	private static final String TAG = "CameraGLView";
 
-	private CameraSurfaceRenderer mRenderer;
+	private final CameraSurfaceRenderer mRenderer;
 	private double mRequestedAspect = -1.0;
 	private boolean mHasSurface;
 	private CameraHandler mCameraHandler = null;

@@ -24,8 +24,6 @@ package com.serenegiant.encoder;
 
 import java.io.IOException;
 
-import com.serenegiant.glutils.RenderHandler;
-
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
@@ -33,6 +31,8 @@ import android.media.MediaFormat;
 import android.opengl.EGLContext;
 import android.util.Log;
 import android.view.Surface;
+
+import com.serenegiant.glutils.RenderHandler;
 
 public class MediaVideoEncoder extends MediaEncoder {
 	private static final boolean DEBUG = false;	// TODO set false on release
@@ -112,12 +112,12 @@ public class MediaVideoEncoder extends MediaEncoder {
 
 	@Override
     protected void release() {
-		if (DEBUG) Log.i(TAG, "release: ");
+		if (DEBUG) Log.i(TAG, "release:");
 		if (mSurface != null) {
 			mSurface.release();
 			mSurface = null;
 		}
-		if (mRenderHandler == null) {
+		if (mRenderHandler != null) {
 			mRenderHandler.release();
 			mRenderHandler = null;
 		}
