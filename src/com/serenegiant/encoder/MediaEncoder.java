@@ -101,6 +101,11 @@ public abstract class MediaEncoder implements Runnable {
         }
 	}
 
+    public String getOutputPath() {
+    	MediaMuxerWrapper muxer = mWeakMuxer.get();
+    	return muxer != null ? muxer.getOutputPath() : null;
+    }
+
     /**
      * the method to indicate frame data is soon available or already available
      * @return return true if encoder is ready to encod.

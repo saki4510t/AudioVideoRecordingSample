@@ -22,32 +22,36 @@ package com.serenegiant.glutils;
  * All files in the folder are under this Apache License, Version 2.0.
 */
 
+import android.graphics.SurfaceTexture;
 import android.opengl.EGLContext;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Surface;
+import android.view.SurfaceHolder;
 
 /**
  * Helper class to draw texture to whole view on private thread
  */
 public final class RenderHandler implements Runnable {
-	private static final boolean DEBUG = false;	// TODO set false on release
+	private static final boolean DEBUG = true;	// TODO set false on release
 	private static final String TAG = "RenderHandler";
 
 	private final Object mSync = new Object();
     private EGLContext mShard_context;
-    private Surface mSurface;
+    private boolean mIsRecordable;
+    private Object mSurface;
 	private int mTexId = -1;
 	private float[] mTexMatrix;
 	
 	private boolean mRequestSetEglContext; 
-	private boolean mRequestDraw;
 	private boolean mRequestRelease;
+	private int mRequestDraw;
 
 	public static final RenderHandler createHandler(String name) {
 		if (DEBUG) Log.v(TAG, "createHandler:");
 		final RenderHandler handler = new RenderHandler();
 		synchronized (handler.mSync) {
-			new Thread(handler, name != null ? name : TAG).start();
+			new Thread(handler, !TextUtils.isEmpty(name) ? name : TAG).start();
 			try {
 				handler.mSync.wait();
 			} catch (InterruptedException e) {
@@ -56,13 +60,16 @@ public final class RenderHandler implements Runnable {
 		return handler;
 	}
 
-	public final void setEglContext(EGLContext shared_context, int tex_id, Surface surface) {
+	public final void setEglContext(EGLContext shared_context, int tex_id, Object surface, boolean isRecordable) {
 		if (DEBUG) Log.i(TAG, "setEglContext:");
+		if (!(surface instanceof Surface) && !(surface instanceof SurfaceTexture) && !(surface instanceof SurfaceHolder))
+			throw new RuntimeException("unsupported window type:" + surface);
 		synchronized (mSync) {
 			if (mRequestRelease) return;
 			mShard_context = shared_context;
 			mTexId = tex_id;
 			mSurface = surface;
+			mIsRecordable = isRecordable;
 			mRequestSetEglContext = true;
 			mSync.notifyAll();
 			try {
@@ -89,12 +96,20 @@ public final class RenderHandler implements Runnable {
 			if (mRequestRelease) return;
 			mTexId = tex_id;
 			mTexMatrix = tex_matrix;
-			mRequestDraw = true;
+			mRequestDraw++;
 			mSync.notifyAll();
 			try {
 				mSync.wait();
 			} catch (InterruptedException e) {
 			}
+		}
+	}
+
+	public boolean isValid() {
+		synchronized (mSync) {
+			return mSurface != null
+				? (mSurface instanceof Surface ? ((Surface)mSurface).isValid() : true)
+				: false;
 		}
 	}
 
@@ -121,7 +136,8 @@ public final class RenderHandler implements Runnable {
 	public final void run() {
 		if (DEBUG) Log.i(TAG, "RenderHandler thread started:");
 		synchronized (mSync) {
-			mRequestSetEglContext = mRequestDraw = mRequestRelease = false;
+			mRequestSetEglContext = mRequestRelease = false;
+			mRequestDraw = 0;
 			mSync.notifyAll();
 		}
         boolean isRunning = true;
@@ -133,8 +149,9 @@ public final class RenderHandler implements Runnable {
 	        		mRequestSetEglContext = false;
 	        		internalPrepare();
 	        	}
-	        	localRequestDraw = mRequestDraw;
-	        	mRequestDraw = false;
+	        	localRequestDraw = mRequestDraw > 0;
+	        	if (localRequestDraw)
+	        		mRequestDraw--;
         	}
         	if (localRequestDraw) {
         		if ((mEgl != null) && mTexId >= 0) {
@@ -167,8 +184,15 @@ public final class RenderHandler implements Runnable {
 	private final void internalPrepare() {
 		if (DEBUG) Log.i(TAG, "internalPrepare:");
 		internalRelease();
-		mEgl = new EGLBase(mShard_context, false);
-		mInputSurface = mEgl.createFromSurface(mSurface);
+		mEgl = new EGLBase(mShard_context, false, mIsRecordable);
+
+		if (mSurface instanceof Surface)
+    		mInputSurface = mEgl.createFromSurface(mSurface);
+		else if (mSurface instanceof SurfaceTexture)
+    		mInputSurface = mEgl.createFromSurface(mSurface);
+		else
+			throw new IllegalArgumentException("Invalid surface object:" + mSurface);
+
 		mInputSurface.makeCurrent();
 		mDrawer = new GLDrawer2D();
 		mSurface = null;

@@ -107,7 +107,7 @@ public class MediaVideoEncoder extends MediaEncoder {
 	}
 
 	public void setEglContext(EGLContext shared_context, int tex_id) {
-		mRenderHandler.setEglContext(shared_context, tex_id, mSurface);
+		mRenderHandler.setEglContext(shared_context, tex_id, mSurface, true);
 	}
 
 	@Override
