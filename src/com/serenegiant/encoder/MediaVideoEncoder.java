@@ -3,7 +3,7 @@ package com.serenegiant.encoder;
  * AudioVideoRecordingSample
  * Sample project to cature audio and video from internal mic/camera and save as MPEG4 file.
  *
- * Copyright (c) 2014 saki t_saki@serenegiant.com
+ * Copyright (c) 2014-2015 saki t_saki@serenegiant.com
  *
  * File name: MediaVideoEncoder.java
  *
@@ -40,18 +40,19 @@ public class MediaVideoEncoder extends MediaEncoder {
 
 	private static final String MIME_TYPE = "video/avc";
 	// parameters for recording
-	// VIDEO_WITH and VIDEO_HEIGHT are better to be same as the camera preview size.
-    private static final int VIDEO_WIDTH = 1280;
-    private static final int VIDEO_HEIGHT = 720;
     private static final int FRAME_RATE = 25;
     private static final float BPP = 0.25f;
- 
+
+    private final int mWidth;
+    private final int mHeight;
     private RenderHandler mRenderHandler;
     private Surface mSurface;
-	
-	public MediaVideoEncoder(MediaMuxerWrapper muxer, MediaEncoderListener listener) {
+
+	public MediaVideoEncoder(final MediaMuxerWrapper muxer, final MediaEncoderListener listener, final int width, final int height) {
 		super(muxer, listener);
 		if (DEBUG) Log.i(TAG, "MediaVideoEncoder: ");
+		mWidth = width;
+		mHeight = height;
 		mRenderHandler = RenderHandler.createHandler(TAG);
 	}
 
@@ -61,7 +62,7 @@ public class MediaVideoEncoder extends MediaEncoder {
 			mRenderHandler.draw(tex_matrix);
 		return result;
 	}
-	
+
 	@Override
 	public boolean frameAvailableSoon() {
 		boolean result;
@@ -83,7 +84,7 @@ public class MediaVideoEncoder extends MediaEncoder {
         }
 		if (DEBUG) Log.i(TAG, "selected codec: " + videoCodecInfo.getName());
 
-        final MediaFormat format = MediaFormat.createVideoFormat(MIME_TYPE, VIDEO_WIDTH, VIDEO_HEIGHT);
+        final MediaFormat format = MediaFormat.createVideoFormat(MIME_TYPE, mWidth, mHeight);
         format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);	// API >= 18
         format.setInteger(MediaFormat.KEY_BIT_RATE, calcBitRate());
         format.setInteger(MediaFormat.KEY_FRAME_RATE, FRAME_RATE);
@@ -93,20 +94,20 @@ public class MediaVideoEncoder extends MediaEncoder {
         mMediaCodec = MediaCodec.createEncoderByType(MIME_TYPE);
         mMediaCodec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
         // get Surface for encoder input
-        // this method only can call between #configure and #start 
+        // this method only can call between #configure and #start
         mSurface = mMediaCodec.createInputSurface();	// API >= 18
         mMediaCodec.start();
         if (DEBUG) Log.i(TAG, "prepare finishing");
         if (mListener != null) {
         	try {
         		mListener.onPrepared(this);
-        	} catch (Exception e) {
+        	} catch (final Exception e) {
         		Log.e(TAG, "prepare:", e);
         	}
         }
 	}
 
-	public void setEglContext(EGLContext shared_context, int tex_id) {
+	public void setEglContext(final EGLContext shared_context, final int tex_id) {
 		mRenderHandler.setEglContext(shared_context, tex_id, mSurface, true);
 	}
 
@@ -125,17 +126,17 @@ public class MediaVideoEncoder extends MediaEncoder {
 	}
 
 	private int calcBitRate() {
-		final int bitrate = (int)(BPP * FRAME_RATE * VIDEO_WIDTH * VIDEO_HEIGHT);
+		final int bitrate = (int)(BPP * FRAME_RATE * mWidth * mHeight);
 		Log.i(TAG, String.format("bitrate=%5.2f[Mbps]", bitrate / 1024f / 1024f));
 		return bitrate;
 	}
-	
+
     /**
      * select the first codec that match a specific MIME type
      * @param mimeType
-     * @return null if no codec matched 
+     * @return null if no codec matched
      */
-    protected static final MediaCodecInfo selectVideoCodec(String mimeType) {
+    protected static final MediaCodecInfo selectVideoCodec(final String mimeType) {
     	if (DEBUG) Log.v(TAG, "selectVideoCodec:");
 
     	// get the list of available codecs
@@ -151,7 +152,7 @@ public class MediaVideoEncoder extends MediaEncoder {
             for (int j = 0; j < types.length; j++) {
                 if (types[j].equalsIgnoreCase(mimeType)) {
                 	if (DEBUG) Log.i(TAG, "codec:" + codecInfo.getName() + ",MIME=" + types[j]);
-            		int format = selectColorFormat(codecInfo, mimeType);
+            		final int format = selectColorFormat(codecInfo, mimeType);
                 	if (format > 0) {
                 		return codecInfo;
                 	}
@@ -165,7 +166,7 @@ public class MediaVideoEncoder extends MediaEncoder {
      * select color format available on specific codec and we can use.
      * @return 0 if no colorFormat is matched
      */
-    protected static final int selectColorFormat(MediaCodecInfo codecInfo, String mimeType) {
+    protected static final int selectColorFormat(final MediaCodecInfo codecInfo, final String mimeType) {
 		if (DEBUG) Log.i(TAG, "selectColorFormat: ");
     	int result = 0;
     	final MediaCodecInfo.CodecCapabilities caps;
@@ -202,7 +203,7 @@ public class MediaVideoEncoder extends MediaEncoder {
 		};
 	}
 
-    private static final boolean isRecognizedViewoFormat(int colorFormat) {
+    private static final boolean isRecognizedViewoFormat(final int colorFormat) {
 		if (DEBUG) Log.i(TAG, "isRecognizedViewoFormat:colorFormat=" + colorFormat);
     	final int n = recognizedFormats != null ? recognizedFormats.length : 0;
     	for (int i = 0; i < n; i++) {
@@ -212,5 +213,12 @@ public class MediaVideoEncoder extends MediaEncoder {
     	}
     	return false;
     }
+
+    @Override
+    protected void signalEndOfInputStream() {
+		if (DEBUG) Log.d(TAG, "sending EOS to encoder");
+		mMediaCodec.signalEndOfInputStream();	// API >= 18
+		mIsEOS = true;
+	}
 
 }

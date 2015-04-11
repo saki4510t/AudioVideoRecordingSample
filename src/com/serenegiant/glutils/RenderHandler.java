@@ -3,7 +3,7 @@ package com.serenegiant.glutils;
  * AudioVideoRecordingSample
  * Sample project to cature audio and video from internal mic/camera and save as MPEG4 file.
  *
- * Copyright (c) 2014 saki t_saki@serenegiant.com
+ * Copyright (c) 2014-2015 saki t_saki@serenegiant.com
  *
  * File name: RenderHandler.java
  *
@@ -33,7 +33,7 @@ import android.view.SurfaceHolder;
  * Helper class to draw texture to whole view on private thread
  */
 public final class RenderHandler implements Runnable {
-	private static final boolean DEBUG = true;	// TODO set false on release
+	private static final boolean DEBUG = false;	// TODO set false on release
 	private static final String TAG = "RenderHandler";
 
 	private final Object mSync = new Object();
@@ -42,25 +42,25 @@ public final class RenderHandler implements Runnable {
     private Object mSurface;
 	private int mTexId = -1;
 	private float[] mTexMatrix;
-	
-	private boolean mRequestSetEglContext; 
+
+	private boolean mRequestSetEglContext;
 	private boolean mRequestRelease;
 	private int mRequestDraw;
 
-	public static final RenderHandler createHandler(String name) {
+	public static final RenderHandler createHandler(final String name) {
 		if (DEBUG) Log.v(TAG, "createHandler:");
 		final RenderHandler handler = new RenderHandler();
 		synchronized (handler.mSync) {
 			new Thread(handler, !TextUtils.isEmpty(name) ? name : TAG).start();
 			try {
 				handler.mSync.wait();
-			} catch (InterruptedException e) {
+			} catch (final InterruptedException e) {
 			}
 		}
 		return handler;
 	}
 
-	public final void setEglContext(EGLContext shared_context, int tex_id, Object surface, boolean isRecordable) {
+	public final void setEglContext(final EGLContext shared_context, final int tex_id, final Object surface, final boolean isRecordable) {
 		if (DEBUG) Log.i(TAG, "setEglContext:");
 		if (!(surface instanceof Surface) && !(surface instanceof SurfaceTexture) && !(surface instanceof SurfaceHolder))
 			throw new RuntimeException("unsupported window type:" + surface);
@@ -74,7 +74,7 @@ public final class RenderHandler implements Runnable {
 			mSync.notifyAll();
 			try {
 				mSync.wait();
-			} catch (InterruptedException e) {
+			} catch (final InterruptedException e) {
 			}
 		}
 	}
@@ -83,25 +83,25 @@ public final class RenderHandler implements Runnable {
 		draw(mTexId, mTexMatrix);
 	}
 
-	public final void draw(int tex_id) {
+	public final void draw(final int tex_id) {
 		draw(tex_id, mTexMatrix);
 	}
 
 	public final void draw(final float[] tex_matrix) {
 		draw(mTexId, tex_matrix);
 	}
-	
-	public final void draw(int tex_id, final float[] tex_matrix) {
+
+	public final void draw(final int tex_id, final float[] tex_matrix) {
 		synchronized (mSync) {
 			if (mRequestRelease) return;
 			mTexId = tex_id;
 			mTexMatrix = tex_matrix;
 			mRequestDraw++;
 			mSync.notifyAll();
-			try {
+/*			try {
 				mSync.wait();
-			} catch (InterruptedException e) {
-			}
+			} catch (final InterruptedException e) {
+			} */
 		}
 	}
 
@@ -121,7 +121,7 @@ public final class RenderHandler implements Runnable {
 			mSync.notifyAll();
 			try {
 				mSync.wait();
-			} catch (InterruptedException e) {
+			} catch (final InterruptedException e) {
 			}
 		}
 	}
@@ -166,7 +166,7 @@ public final class RenderHandler implements Runnable {
         		synchronized(mSync) {
         			try {
 						mSync.wait();
-					} catch (InterruptedException e) {
+					} catch (final InterruptedException e) {
 						break;
 					}
         		}
@@ -186,12 +186,7 @@ public final class RenderHandler implements Runnable {
 		internalRelease();
 		mEgl = new EGLBase(mShard_context, false, mIsRecordable);
 
-		if (mSurface instanceof Surface)
-    		mInputSurface = mEgl.createFromSurface(mSurface);
-		else if (mSurface instanceof SurfaceTexture)
-    		mInputSurface = mEgl.createFromSurface(mSurface);
-		else
-			throw new IllegalArgumentException("Invalid surface object:" + mSurface);
+   		mInputSurface = mEgl.createFromSurface(mSurface);
 
 		mInputSurface.makeCurrent();
 		mDrawer = new GLDrawer2D();

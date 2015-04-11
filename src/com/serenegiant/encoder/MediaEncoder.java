@@ -3,7 +3,7 @@ package com.serenegiant.encoder;
  * AudioVideoRecordingSample
  * Sample project to cature audio and video from internal mic/camera and save as MPEG4 file.
  *
- * Copyright (c) 2014 saki t_saki@serenegiant.com
+ * Copyright (c) 2014-2015 saki t_saki@serenegiant.com
  *
  * File name: MediaEncoder.java
  *
@@ -34,7 +34,7 @@ public abstract class MediaEncoder implements Runnable {
 	private static final boolean DEBUG = false;	// TODO set false on release
 	private static final String TAG = "MediaEncoder";
 
-	protected static final int TIMEOUT_USEC = 10000;	// 10[msec]   
+	protected static final int TIMEOUT_USEC = 10000;	// 10[msec]
 	protected static final int MSG_FRAME_AVAILABLE = 1;
 	protected static final int MSG_STOP_RECORDING = 9;
 
@@ -42,7 +42,7 @@ public abstract class MediaEncoder implements Runnable {
 		public void onPrepared(MediaEncoder encoder);
 		public void onStopped(MediaEncoder encoder);
 	}
-	
+
 	protected final Object mSync = new Object();
 	/**
 	 * Flag that indicate this encoder is capturing now.
@@ -83,7 +83,7 @@ public abstract class MediaEncoder implements Runnable {
 
     protected final MediaEncoderListener mListener;
 
-    public MediaEncoder(MediaMuxerWrapper muxer, MediaEncoderListener listener) {
+    public MediaEncoder(final MediaMuxerWrapper muxer, final MediaEncoderListener listener) {
     	if (listener == null) throw new NullPointerException("MediaEncoderListener is null");
     	if (muxer == null) throw new NullPointerException("MediaMuxerWrapper is null");
 		mWeakMuxer = new WeakReference<MediaMuxerWrapper>(muxer);
@@ -96,13 +96,13 @@ public abstract class MediaEncoder implements Runnable {
             new Thread(this, getClass().getSimpleName()).start();
             try {
             	mSync.wait();
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
             }
         }
 	}
 
     public String getOutputPath() {
-    	MediaMuxerWrapper muxer = mWeakMuxer.get();
+    	final MediaMuxerWrapper muxer = mWeakMuxer.get();
     	return muxer != null ? muxer.getOutputPath() : null;
     }
 
@@ -133,7 +133,7 @@ public abstract class MediaEncoder implements Runnable {
     		mRequestDrain = 0;
             mSync.notify();
         }
-        boolean isRunning = true;
+        final boolean isRunning = true;
         boolean localRequestStop;
         boolean localRequestDrain;
         while (isRunning) {
@@ -159,7 +159,7 @@ public abstract class MediaEncoder implements Runnable {
 	        	synchronized (mSync) {
 		        	try {
 						mSync.wait();
-					} catch (InterruptedException e) {
+					} catch (final InterruptedException e) {
 						break;
 					}
 	        	}
@@ -213,7 +213,7 @@ public abstract class MediaEncoder implements Runnable {
 		if (DEBUG) Log.d(TAG, "release:");
 		try {
 			mListener.onStopped(this);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			Log.e(TAG, "failed onStopped", e);
 		}
 		mIsCapturing = false;
@@ -222,16 +222,16 @@ public abstract class MediaEncoder implements Runnable {
 	            mMediaCodec.stop();
 	            mMediaCodec.release();
 	            mMediaCodec = null;
-			} catch (Exception e) {
+			} catch (final Exception e) {
 				Log.e(TAG, "failed releasing MediaCodec", e);
 			}
         }
         if (mMuxerStarted) {
-       		final MediaMuxerWrapper muxer = mWeakMuxer.get();
+       		final MediaMuxerWrapper muxer = mWeakMuxer != null ? mWeakMuxer.get() : null;
        		if (muxer != null) {
        			try {
            			muxer.stop();
-    			} catch (Exception e) {
+    			} catch (final Exception e) {
     				Log.e(TAG, "failed stopping muxer", e);
     			}
        		}
@@ -253,21 +253,17 @@ public abstract class MediaEncoder implements Runnable {
      * @param length　length of byte array, zero means EOS.
      * @param presentationTimeUs
      */
-    protected void encode(byte[] buffer, int length, long presentationTimeUs) {
+    protected void encode(final ByteBuffer buffer, final int length, final long presentationTimeUs) {
     	if (!mIsCapturing) return;
-    	int ix = 0, sz;
         final ByteBuffer[] inputBuffers = mMediaCodec.getInputBuffers();
-        while (mIsCapturing && ix < length) {
+        while (mIsCapturing) {
 	        final int inputBufferIndex = mMediaCodec.dequeueInputBuffer(TIMEOUT_USEC);
 	        if (inputBufferIndex >= 0) {
 	            final ByteBuffer inputBuffer = inputBuffers[inputBufferIndex];
 	            inputBuffer.clear();
-	            sz = inputBuffer.remaining();
-	            sz = (ix + sz < length) ? sz : length - ix; 
-	            if (sz > 0 && (buffer != null)) {
-	            	inputBuffer.put(buffer, ix, sz);
+	            if (buffer != null) {
+	            	inputBuffer.put(buffer);
 	            }
-	            ix += sz;
 //	            if (DEBUG) Log.v(TAG, "encode:queueInputBuffer");
 	            if (length <= 0) {
 	            	// send EOS
@@ -277,9 +273,10 @@ public abstract class MediaEncoder implements Runnable {
 	            		presentationTimeUs, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
 		            break;
 	            } else {
-	            	mMediaCodec.queueInputBuffer(inputBufferIndex, 0, sz,
+	            	mMediaCodec.queueInputBuffer(inputBufferIndex, 0, length,
 	            		presentationTimeUs, 0);
 	            }
+	            break;
 	        } else if (inputBufferIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
 	        	// wait for MediaCodec encoder is ready to encode
 	        	// nothing to do here because MediaCodec#dequeueInputBuffer(TIMEOUT_USEC)
@@ -307,7 +304,7 @@ LOOP:	while (mIsCapturing) {
             if (encoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER) {
                 // wait 5 counts(=TIMEOUT_USEC x 5 = 50msec) until data/EOS come
                 if (!mIsEOS) {
-                	if (++count > 5)	
+                	if (++count > 5)
                 		break LOOP;		// out of while
                 }
             } else if (encoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
@@ -334,7 +331,7 @@ LOOP:	while (mIsCapturing) {
 	               		while (!muxer.isStarted())
 						try {
 							muxer.wait(100);
-						} catch (InterruptedException e) {
+						} catch (final InterruptedException e) {
 							break LOOP;
 						}
                		}
@@ -373,7 +370,7 @@ LOOP:	while (mIsCapturing) {
                 mMediaCodec.releaseOutputBuffer(encoderStatus, false);
                 if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                 	// when EOS come.
-               		mMuxerStarted = mIsCapturing = false;
+               		mIsCapturing = false;
                     break;      // out of while
                 }
             }

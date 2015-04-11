@@ -3,7 +3,7 @@ package com.serenegiant.glutils;
  * AudioVideoRecordingSample
  * Sample project to cature audio and video from internal mic/camera and save as MPEG4 file.
  *
- * Copyright (c) 2014 saki t_saki@serenegiant.com
+ * Copyright (c) 2014-2015 saki t_saki@serenegiant.com
  *
  * File name: GLDrawer2D.java
  *
@@ -110,23 +110,34 @@ public class GLDrawer2D {
 			GLES20.glDeleteProgram(hProgram);
 		hProgram = -1;
 	}
-	
+
 	/**
 	 * draw specific texture with specific texture matrix
 	 * @param tex_id texture ID
 	 * @param tex_matrix texture matrix、if this is null, the last one use(we don't check size of this array and needs at least 16 of float)
 	 */
-	public void draw(int tex_id, float[] tex_matrix) {
+	public void draw(final int tex_id, final float[] tex_matrix) {
 		GLES20.glUseProgram(hProgram);
 		if (tex_matrix != null)
 			GLES20.glUniformMatrix4fv(muTexMatrixLoc, 1, false, tex_matrix, 0);
+        GLES20.glUniformMatrix4fv(muMVPMatrixLoc, 1, false, mMvpMatrix, 0);
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
 		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, tex_id);
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, VERTEX_NUM);
 		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0);
         GLES20.glUseProgram(0);
 	}
-	
+
+	/**
+	 * Set model/view/projection transform matrix
+	 * @param matrix
+	 * @param offset
+	 */
+	public void setMatrix(final float[] matrix, final int offset) {
+		if ((matrix != null) && (matrix.length >= offset + 16)) {
+			System.arraycopy(matrix, offset, mMvpMatrix, 0, 16);
+		}
+	}
 	/**
 	 * create external texture
 	 * @return texture ID
@@ -150,7 +161,7 @@ public class GLDrawer2D {
 	/**
 	 * delete specific texture
 	 */
-	public static void deleteTex(int hTex) {
+	public static void deleteTex(final int hTex) {
 		if (DEBUG) Log.v(TAG, "deleteTex:");
 		final int[] tex = new int[] {hTex};
 		GLES20.glDeleteTextures(1, tex, 0);
@@ -162,7 +173,7 @@ public class GLDrawer2D {
 	 * @param fss source of fragment shader
 	 * @return
 	 */
-	public static int loadShader(String vss, String fss) {
+	public static int loadShader(final String vss, final String fss) {
 		if (DEBUG) Log.v(TAG, "loadShader:");
 		int vs = GLES20.glCreateShader(GLES20.GL_VERTEX_SHADER);
 		GLES20.glShaderSource(vs, vss);

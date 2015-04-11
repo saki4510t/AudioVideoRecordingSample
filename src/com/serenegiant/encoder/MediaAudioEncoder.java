@@ -3,7 +3,7 @@ package com.serenegiant.encoder;
  * AudioVideoRecordingSample
  * Sample project to cature audio and video from internal mic/camera and save as MPEG4 file.
  *
- * Copyright (c) 2014 saki t_saki@serenegiant.com
+ * Copyright (c) 2014-2015 saki t_saki@serenegiant.com
  *
  * File name: MediaAudioEncoder.java
  *
@@ -23,6 +23,7 @@ package com.serenegiant.encoder;
 */
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import android.media.AudioFormat;
 import android.media.AudioRecord;
@@ -40,10 +41,12 @@ public class MediaAudioEncoder extends MediaEncoder {
 	private static final String MIME_TYPE = "audio/mp4a-latm";
     private static final int SAMPLE_RATE = 44100;	// 44.1[KHz] is only setting guaranteed to be available on all devices.
     private static final int BIT_RATE = 64000;
-    
+	public static final int SAMPLES_PER_FRAME = 1024;	// AAC, bytes/frame/channel
+	public static final int FRAMES_PER_BUFFER = 25; 	// AAC, frame/buffer/sec
+
     private AudioThread mAudioThread = null;
 
-	public MediaAudioEncoder(MediaMuxerWrapper muxer, MediaEncoderListener listener) {
+	public MediaAudioEncoder(final MediaMuxerWrapper muxer, final MediaEncoderListener listener) {
 		super(muxer, listener);
 	}
 
@@ -75,7 +78,7 @@ public class MediaAudioEncoder extends MediaEncoder {
         if (mListener != null) {
         	try {
         		mListener.onPrepared(this);
-        	} catch (Exception e) {
+        	} catch (final Exception e) {
         		Log.e(TAG, "prepare:", e);
         	}
         }
@@ -104,24 +107,34 @@ public class MediaAudioEncoder extends MediaEncoder {
     private class AudioThread extends Thread {
     	@Override
     	public void run() {
-//    		android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+    		android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
     		try {
-	            final int buf_sz = AudioRecord.getMinBufferSize(
-	            	SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT) * 4;
-	            final AudioRecord audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
-	            	SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, buf_sz);
+				final int min_buffer_size = AudioRecord.getMinBufferSize(
+					SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
+					AudioFormat.ENCODING_PCM_16BIT);
+				int buffer_size = SAMPLES_PER_FRAME * FRAMES_PER_BUFFER;
+				if (buffer_size < min_buffer_size)
+					buffer_size = ((min_buffer_size / SAMPLES_PER_FRAME) + 1) * SAMPLES_PER_FRAME * 2;
+
+				final AudioRecord audioRecord = new AudioRecord(
+					MediaRecorder.AudioSource.MIC, SAMPLE_RATE,
+					AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, buffer_size);
+
 	            try {
-	            	if (mIsCapturing) {
+					if (mIsCapturing && (audioRecord.getState() == AudioRecord.STATE_INITIALIZED)) {
 	    				if (DEBUG) Log.v(TAG, "AudioThread:start audio recording");
-		                final byte[] buf = new byte[buf_sz];
+						final ByteBuffer buf = ByteBuffer.allocateDirect(SAMPLES_PER_FRAME);
 		                int readBytes;
 		                audioRecord.startRecording();
 		                try {
 				    		while (mIsCapturing && !mRequestStop && !mIsEOS) {
 				    			// read audio data from internal mic
-				    			readBytes = audioRecord.read(buf, 0, buf_sz);
+								buf.clear();
+				    			readBytes = audioRecord.read(buf, SAMPLES_PER_FRAME);
 				    			if (readBytes > 0) {
 				    			    // set audio data to encoder
+									buf.position(readBytes);
+									buf.flip();
 				    				encode(buf, readBytes, getPTSUs());
 				    				frameAvailableSoon();
 				    			}
@@ -134,7 +147,7 @@ public class MediaAudioEncoder extends MediaEncoder {
 	            } finally {
 	            	audioRecord.release();
 	            }
-    		} catch (Exception e) {
+    		} catch (final Exception e) {
     			Log.e(TAG, "AudioThread#run", e);
     		}
 			if (DEBUG) Log.v(TAG, "AudioThread:finished");
@@ -146,7 +159,7 @@ public class MediaAudioEncoder extends MediaEncoder {
      * @param mimeType
      * @return
      */
-    private static final MediaCodecInfo selectAudioCodec(String mimeType) {
+    private static final MediaCodecInfo selectAudioCodec(final String mimeType) {
     	if (DEBUG) Log.v(TAG, "selectAudioCodec:");
 
     	MediaCodecInfo result = null;
