@@ -57,6 +57,8 @@ public final class CameraGLView extends GLSurfaceView {
 	private static final boolean DEBUG = false; // TODO set false on release
 	private static final String TAG = "CameraGLView";
 
+	private static final int CAMERA_ID = 0;
+
 	private static final int SCALE_STRETCH_FIT = 0;
 	private static final int SCALE_KEEP_ASPECT_VIEWPORT = 1;
 	private static final int SCALE_KEEP_ASPECT = 2;
@@ -189,7 +191,6 @@ public final class CameraGLView extends GLSurfaceView {
 	private synchronized void startPreview(final int width, final int height) {
 		if (mCameraHandler == null) {
 			final CameraThread thread = new CameraThread(this);
-			thread.setName("Camera Thread");
 			thread.start();
 			mCameraHandler = thread.getHandler();
 		}
@@ -437,6 +438,7 @@ public final class CameraGLView extends GLSurfaceView {
 		private boolean mIsFrontFace;
 
     	public CameraThread(final CameraGLView parent) {
+			super("Camera thread");
     		mWeakParent = new WeakReference<CameraGLView>(parent);
     	}
 
@@ -483,7 +485,7 @@ public final class CameraGLView extends GLSurfaceView {
 				// This is a sample project so just use 0 as camera ID.
 				// it is better to selecting camera is available
 				try {
-					mCamera = Camera.open(0);
+					mCamera = Camera.open(CAMERA_ID);
 					final Camera.Parameters params = mCamera.getParameters();
 					final List<String> focusModes = params.getSupportedFocusModes();
 					if (focusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
@@ -546,8 +548,6 @@ public final class CameraGLView extends GLSurfaceView {
 				if (mCamera != null) {
 					// start camera preview display
 					mCamera.startPreview();
-					final Camera.Size size = mCamera.getParameters().getPreviewSize();
-					Log.i(TAG, String.format("previewSize(%d, %d)", size.width, size.height));
 				}
 			}
 		}
@@ -589,7 +589,7 @@ public final class CameraGLView extends GLSurfaceView {
 			// get whether the camera is front camera or back camera
 			final Camera.CameraInfo info =
 					new android.hardware.Camera.CameraInfo();
-				android.hardware.Camera.getCameraInfo(0, info);
+				android.hardware.Camera.getCameraInfo(CAMERA_ID, info);
 			mIsFrontFace = (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT);
 			if (mIsFrontFace) {	// front camera
 				degrees = (info.orientation + degrees) % 360;

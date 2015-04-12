@@ -27,7 +27,6 @@
     android:id="@+id/RelativeLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     tools:context="com.serenegiant.audiovideosample.CameraFragment" >
 
 	<com.serenegiant.audiovideosample.CameraGLView
@@ -38,8 +37,8 @@
 
     <ImageButton
         android:id="@+id/record_button"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="20dp"

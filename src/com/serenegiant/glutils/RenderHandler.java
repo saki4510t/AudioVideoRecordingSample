@@ -107,9 +107,7 @@ public final class RenderHandler implements Runnable {
 
 	public boolean isValid() {
 		synchronized (mSync) {
-			return mSurface != null
-				? (mSurface instanceof Surface ? ((Surface)mSurface).isValid() : true)
-				: false;
+			return !(mSurface instanceof Surface) || ((Surface)mSurface).isValid();
 		}
 	}
 
@@ -140,9 +138,8 @@ public final class RenderHandler implements Runnable {
 			mRequestDraw = 0;
 			mSync.notifyAll();
 		}
-        boolean isRunning = true;
         boolean localRequestDraw;
-        while (isRunning) {
+        for (;;) {
         	synchronized (mSync) {
         		if (mRequestRelease) break;
 	        	if (mRequestSetEglContext) {
@@ -150,17 +147,16 @@ public final class RenderHandler implements Runnable {
 	        		internalPrepare();
 	        	}
 	        	localRequestDraw = mRequestDraw > 0;
-	        	if (localRequestDraw)
+	        	if (localRequestDraw) {
 	        		mRequestDraw--;
+//					mSync.notifyAll();
+				}
         	}
         	if (localRequestDraw) {
         		if ((mEgl != null) && mTexId >= 0) {
             		mInputSurface.makeCurrent();
             		mDrawer.draw(mTexId, mTexMatrix);
             		mInputSurface.swap();
-        		}
-        		synchronized (mSync) {
-        			mSync.notifyAll();
         		}
         	} else {
         		synchronized(mSync) {
@@ -173,7 +169,6 @@ public final class RenderHandler implements Runnable {
         	}
         }
         synchronized (mSync) {
-        	isRunning = false;
         	mRequestRelease = true;
             internalRelease();
             mSync.notifyAll();
