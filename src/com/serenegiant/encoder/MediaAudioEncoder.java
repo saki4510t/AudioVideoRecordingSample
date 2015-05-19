@@ -100,6 +100,14 @@ public class MediaAudioEncoder extends MediaEncoder {
 		super.release();
     }
 
+	private static final int[] AUDIO_SOURCES = new int[] {
+		MediaRecorder.AudioSource.MIC,
+		MediaRecorder.AudioSource.DEFAULT,
+		MediaRecorder.AudioSource.CAMCORDER,
+		MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+		MediaRecorder.AudioSource.VOICE_RECOGNITION,
+	};
+
 	/**
 	 * Thread to capture audio data from internal mic as uncompressed 16bit PCM data
 	 * and write them to the MediaCodec encoder
@@ -116,37 +124,50 @@ public class MediaAudioEncoder extends MediaEncoder {
 				if (buffer_size < min_buffer_size)
 					buffer_size = ((min_buffer_size / SAMPLES_PER_FRAME) + 1) * SAMPLES_PER_FRAME * 2;
 
-				final AudioRecord audioRecord = new AudioRecord(
-					MediaRecorder.AudioSource.MIC, SAMPLE_RATE,
-					AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, buffer_size);
-
-	            try {
-					if (mIsCapturing && (audioRecord.getState() == AudioRecord.STATE_INITIALIZED)) {
-	    				if (DEBUG) Log.v(TAG, "AudioThread:start audio recording");
-						final ByteBuffer buf = ByteBuffer.allocateDirect(SAMPLES_PER_FRAME);
-		                int readBytes;
-		                audioRecord.startRecording();
-		                try {
-				    		while (mIsCapturing && !mRequestStop && !mIsEOS) {
-				    			// read audio data from internal mic
-								buf.clear();
-				    			readBytes = audioRecord.read(buf, SAMPLES_PER_FRAME);
-				    			if (readBytes > 0) {
-				    			    // set audio data to encoder
-									buf.position(readBytes);
-									buf.flip();
-				    				encode(buf, readBytes, getPTSUs());
-				    				frameAvailableSoon();
-				    			}
-				    		}
-		    				frameAvailableSoon();
-		                } finally {
-		                	audioRecord.stop();
-		                }
-	            	}
-	            } finally {
-	            	audioRecord.release();
-	            }
+				AudioRecord audioRecord = null;
+				for (final int source : AUDIO_SOURCES) {
+					try {
+						audioRecord = new AudioRecord(
+							source, SAMPLE_RATE,
+							AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, buffer_size);
+	    	            if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED)
+	    	            	audioRecord = null;
+					} catch (final Exception e) {
+						audioRecord = null;
+					}
+					if (audioRecord != null) break;
+				}
+				if (audioRecord != null) {
+		            try {
+						if (mIsCapturing) {
+		    				if (DEBUG) Log.v(TAG, "AudioThread:start audio recording");
+							final ByteBuffer buf = ByteBuffer.allocateDirect(SAMPLES_PER_FRAME);
+			                int readBytes;
+			                audioRecord.startRecording();
+			                try {
+					    		for (; mIsCapturing && !mRequestStop && !mIsEOS ;) {
+					    			// read audio data from internal mic
+									buf.clear();
+					    			readBytes = audioRecord.read(buf, SAMPLES_PER_FRAME);
+					    			if (readBytes > 0) {
+					    			    // set audio data to encoder
+										buf.position(readBytes);
+										buf.flip();
+					    				encode(buf, readBytes, getPTSUs());
+					    				frameAvailableSoon();
+					    			}
+					    		}
+			    				frameAvailableSoon();
+			                } finally {
+			                	audioRecord.stop();
+			                }
+		            	}
+		            } finally {
+		            	audioRecord.release();
+		            }
+				} else {
+					Log.e(TAG, "failed to initialize AudioRecord");
+				}
     		} catch (final Exception e) {
     			Log.e(TAG, "AudioThread#run", e);
     		}
