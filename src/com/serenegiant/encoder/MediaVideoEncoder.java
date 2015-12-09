@@ -63,6 +63,13 @@ public class MediaVideoEncoder extends MediaEncoder {
 		return result;
 	}
 
+	public boolean frameAvailableSoon(final float[] tex_matrix, final float[] mvp_matrix) {
+		boolean result;
+		if (result = super.frameAvailableSoon())
+			mRenderHandler.draw(tex_matrix, mvp_matrix);
+		return result;
+	}
+
 	@Override
 	public boolean frameAvailableSoon() {
 		boolean result;

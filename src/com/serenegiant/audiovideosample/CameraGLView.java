@@ -355,7 +355,8 @@ public final class CameraGLView extends GLSurfaceView {
 				synchronized (this) {
 					if (mVideoEncoder != null) {
 						// notify to capturing thread that the camera frame is available.
-						mVideoEncoder.frameAvailableSoon(mStMatrix);
+//						mVideoEncoder.frameAvailableSoon(mStMatrix);
+						mVideoEncoder.frameAvailableSoon(mStMatrix, mMvpMatrix);
 					}
 				}
 			}

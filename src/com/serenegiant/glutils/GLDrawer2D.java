@@ -136,6 +136,8 @@ public class GLDrawer2D {
 	public void setMatrix(final float[] matrix, final int offset) {
 		if ((matrix != null) && (matrix.length >= offset + 16)) {
 			System.arraycopy(matrix, offset, mMvpMatrix, 0, 16);
+		} else {
+			Matrix.setIdentityM(mMvpMatrix, 0);
 		}
 	}
 	/**
