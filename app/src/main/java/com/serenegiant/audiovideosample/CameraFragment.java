@@ -38,7 +38,6 @@ import com.serenegiant.encoder.MediaAudioEncoder;
 import com.serenegiant.encoder.MediaEncoder;
 import com.serenegiant.encoder.MediaMuxerWrapper;
 import com.serenegiant.encoder.MediaVideoEncoder;
-import com.serenegiant.mediaaudiotest.R;
 
 public class CameraFragment extends Fragment {
 	private static final boolean DEBUG = false;	// TODO set false on release

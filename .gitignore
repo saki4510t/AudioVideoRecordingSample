@@ -8,11 +8,21 @@
 # Java class files
 *.class
 
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+
 # generated files
+bin/
+obj
+obj/local
 gen/
 bin/dexedLibs
 bin/res
 bin/*.xml
+bin/classes
+bin/res
+bin/jarlist.cache
 *.cache
 
 # Local configuration file (sdk path, etc)
@@ -29,4 +39,31 @@ proguard/
 *.iml
 *.ipr
 *.iws
-.idea/
+
+# Gradle
+.gradle/
+.gradle
+build/
+build
+
+# gedit
+*~
+
+.idea/*.xml
+!.idea/codeStyleSettings.xml
+!.idea/copyright/*.xml
+!.idea/fileColors.xml
+!.idea/encodings.xml
+!.idea/gradle.xml
+!.idea/runConfigurations/*.xml
+
+!.idea/inspectionProfiles/*.xml
+.idea/inspectionProfiles/profiles_settings.xml
+
+!.idea/scopes/*.xml
+.idea/scopes/scope_settings.xml
+
+!.idea/templateLanguages.xml
+!.idea/vcs.xml
+profiles_settings.xml
+.idea/libraries

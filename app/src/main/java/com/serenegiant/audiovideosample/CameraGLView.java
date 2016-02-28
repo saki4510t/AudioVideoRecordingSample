@@ -24,6 +24,8 @@ package com.serenegiant.audiovideosample;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -194,7 +196,7 @@ public final class CameraGLView extends GLSurfaceView {
 			thread.start();
 			mCameraHandler = thread.getHandler();
 		}
-		mCameraHandler.startPreview(width, height);
+		mCameraHandler.startPreview(1280, 720/*width, height*/);
 	}
 
 	/**
@@ -508,14 +510,14 @@ public final class CameraGLView extends GLSurfaceView {
 					Log.i(TAG, String.format("fps:%d-%d", max_fps[0], max_fps[1]));
 					params.setPreviewFpsRange(max_fps[0], max_fps[1]);
 					params.setRecordingHint(true);
-					// request preview size
-					// this is a sample project and just use fixed value
-					// if you want to use other size, you also need to change the recording size.
-					params.setPreviewSize(1280, 720);
-/*					final Size preferedSize = params.getPreferredPreviewSizeForVideo();
-					if (preferedSize != null) {
-						params.setPreviewSize(preferedSize.width, preferedSize.height);
-					} */
+					// request closest supported preview size
+					final Camera.Size closestSize = getClosestSupportedSize(
+						params.getSupportedPreviewSizes(), width, height);
+					params.setPreviewSize(closestSize.width, closestSize.height);
+					// request closest picture size for an aspect ratio issue on Nexus7
+					final Camera.Size pictureSize = getClosestSupportedSize(
+						params.getSupportedPictureSizes(), width, height);
+					params.setPictureSize(pictureSize.width, pictureSize.height);
 					// rotate camera preview according to the device orientation
 					setRotation(params);
 					mCamera.setParameters(params);
@@ -551,6 +553,21 @@ public final class CameraGLView extends GLSurfaceView {
 					mCamera.startPreview();
 				}
 			}
+		}
+
+		private static Camera.Size getClosestSupportedSize(List<Camera.Size> supportedSizes, final int requestedWidth, final int requestedHeight) {
+			return (Camera.Size)Collections.min(supportedSizes, new Comparator<Camera.Size>() {
+
+				private int diff(final Camera.Size size) {
+					return Math.abs(requestedWidth - size.width) + Math.abs(requestedHeight - size.height);
+				}
+
+				@Override
+				public int compare(final Camera.Size lhs, final Camera.Size rhs) {
+					return diff(lhs) - diff(rhs);
+				}
+			});
+
 		}
 
 		/**

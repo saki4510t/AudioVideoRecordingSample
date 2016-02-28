@@ -4,7 +4,7 @@
  * AudioVideoRecordingSample
  * Sample project to cature audio and video from internal mic/camera and save as MPEG4 file.
  *
- * Copyright (c) 2014 saki t_saki@serenegiant.com
+ * Copyright (c) 2014-2016 saki t_saki@serenegiant.com
  *
  * File name: AndroidManifest.xml
  *
@@ -24,13 +24,8 @@
 */
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.serenegiant.mediaaudiotest"
-    android:versionCode="4"
-    android:versionName="1.3" >
+	package="com.serenegiant.audiovideosample" >
 
-    <uses-sdk
-        android:minSdkVersion="18"
-        android:targetSdkVersion="19" />
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
