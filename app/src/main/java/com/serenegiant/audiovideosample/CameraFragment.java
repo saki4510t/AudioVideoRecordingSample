@@ -22,6 +22,7 @@ package com.serenegiant.audiovideosample;
  * All files in the folder are under this Apache License, Version 2.0.
 */
 
+import java.io.File;
 import java.io.IOException;
 
 import android.app.Fragment;
@@ -121,7 +122,11 @@ public class CameraFragment extends Fragment {
 		if (DEBUG) Log.v(TAG, "startRecording:");
 		try {
 			mRecordButton.setColorFilter(0xffff0000);	// turn red
-			mMuxer = new MediaMuxerWrapper(getActivity().getExternalFilesDir(null).getAbsolutePath() +"/ttt.mp4");	// if you record audio only, ".m4a" is also OK.
+			String outputPath = null;
+			File dir = getActivity().getExternalFilesDir(null);
+			if(dir != null)
+				outputPath = dir.getAbsolutePath() +"/output.mp4";
+			mMuxer = new MediaMuxerWrapper(outputPath);	// if you record audio only, ".m4a" is also OK.
 			if (true) {
 				// for video capturing
 				new MediaVideoEncoder(mMuxer, mMediaEncoderListener, mCameraView.getVideoWidth(), mCameraView.getVideoHeight());
