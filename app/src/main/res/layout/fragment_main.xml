@@ -31,7 +31,7 @@
 	android:layout_height="match_parent"
 	xmlns:app="http://schemas.android.com/apk/res-auto">
 
-	<com.serenegiant.audiovideosample.AspectFrameLayout
+	<com.serenegiant.audiovideosample.ui.AspectFrameLayout
 		android:id="@+id/cameraPreview_afl"
 		android:layout_width="0dp"
 		android:layout_height="0dp"
@@ -39,22 +39,19 @@
 		app:layout_constraintBottom_toBottomOf="parent"
 		app:layout_constraintEnd_toEndOf="parent"
 		app:layout_constraintTop_toTopOf="parent" >
-		<com.serenegiant.audiovideosample.CameraGLView
+		<com.serenegiant.audiovideosample.ui.CameraGLView
 			android:id="@+id/cameraView"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
 			android:layout_gravity="center" />
 
-	</com.serenegiant.audiovideosample.AspectFrameLayout>
+	</com.serenegiant.audiovideosample.ui.AspectFrameLayout>
 
-    <ImageButton
-		android:contentDescription="@string/app_name"
+    <Button
         android:id="@+id/record_button"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:background="@null"
-        android:scaleType="fitXY"
-        android:src="@android:drawable/ic_menu_camera"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+		android:text="@string/record"
 		app:layout_constraintStart_toStartOf="parent"
 		app:layout_constraintEnd_toEndOf="parent"
 		app:layout_constraintBottom_toBottomOf="parent"

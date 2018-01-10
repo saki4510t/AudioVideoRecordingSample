@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.serenegiant.audiovideosample;
+package com.serenegiant.audiovideosample.ui;
 
 import android.content.Context;
 import android.util.AttributeSet;

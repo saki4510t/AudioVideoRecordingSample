@@ -1,4 +1,4 @@
-package com.serenegiant.audiovideosample;
+package com.serenegiant.audiovideosample.ui;
 /*
  * AudioVideoRecordingSample
  * Sample project to cature audio and video from internal mic/camera and save as MPEG4 file.
@@ -32,13 +32,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.TextView;
 
-import com.serenegiant.encoder.MediaAudioEncoder;
-import com.serenegiant.encoder.MediaEncoder;
-import com.serenegiant.encoder.MediaMuxerWrapper;
-import com.serenegiant.encoder.MediaVideoEncoder;
+import com.serenegiant.audiovideosample.R;
+import com.serenegiant.audiovideosample.encoder.MediaAudioEncoder;
+import com.serenegiant.audiovideosample.encoder.MediaEncoder;
+import com.serenegiant.audiovideosample.encoder.MediaMuxerWrapper;
+import com.serenegiant.audiovideosample.encoder.MediaVideoEncoder;
 
 public class CameraFragment extends Fragment {
 	private static final boolean DEBUG = false;	// TODO set false on release
@@ -54,7 +55,7 @@ public class CameraFragment extends Fragment {
 	/**
 	 * button for start/stop recording
 	 */
-	private ImageButton mRecordButton;
+	private Button mRecordButton;
 	/**
 	 * muxer for audio/video recording
 	 */
@@ -121,7 +122,7 @@ public class CameraFragment extends Fragment {
 	private void startRecording() {
 		if (DEBUG) Log.v(TAG, "startRecording:");
 		try {
-			mRecordButton.setColorFilter(0xffff0000);	// turn red
+			mRecordButton.setText(R.string.stop);	// turn red
 			String outputPath = null;
 			File dir = getActivity().getExternalFilesDir(null);
 			if(dir != null)
@@ -138,7 +139,6 @@ public class CameraFragment extends Fragment {
 			mMuxer.prepare();
 			mMuxer.startRecording();
 		} catch (final IOException e) {
-			mRecordButton.setColorFilter(0);
 			Log.e(TAG, "startCapture:", e);
 		}
 	}
@@ -148,7 +148,7 @@ public class CameraFragment extends Fragment {
 	 */
 	private void stopRecording() {
 		if (DEBUG) Log.v(TAG, "stopRecording:mMuxer=" + mMuxer);
-		mRecordButton.setColorFilter(0);	// return to default color
+		mRecordButton.setText(R.string.record);	// return to default color
 		if (mMuxer != null) {
 			mMuxer.stopRecording();
 			mMuxer = null;
