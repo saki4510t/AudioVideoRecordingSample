@@ -22,46 +22,42 @@
  * All files in the folder are under this Apache License, Version 2.0.
 */
 -->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/RelativeLayout1"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.serenegiant.audiovideosample.CameraFragment" >
 
-	<com.serenegiant.audiovideosample.CameraGLView
-		android:id="@+id/cameraView"
-		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:layout_centerInParent="true" />
+<android.support.constraint.ConstraintLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/RelativeLayout1"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	xmlns:app="http://schemas.android.com/apk/res-auto">
+
+	<com.serenegiant.audiovideosample.AspectFrameLayout
+		android:id="@+id/cameraPreview_afl"
+		android:layout_width="0dp"
+		android:layout_height="0dp"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintTop_toTopOf="parent" >
+		<com.serenegiant.audiovideosample.CameraGLView
+			android:id="@+id/cameraView"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:layout_gravity="center" />
+
+	</com.serenegiant.audiovideosample.AspectFrameLayout>
 
     <ImageButton
+		android:contentDescription="@string/app_name"
         android:id="@+id/record_button"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="20dp"
         android:background="@null"
         android:scaleType="fitXY"
-        android:src="@android:drawable/ic_menu_camera" />
+        android:src="@android:drawable/ic_menu_camera"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintBottom_toBottomOf="parent"
+		/>
 
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:text="You can change scale mode with touching screen."
-        android:textColor="#ffff0000" />
-
-    <TextView
-        android:id="@+id/scalemode_textview"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/textView1"
-        android:text="scale mode"
-        android:textColor="#ffff0000" />
-
-</RelativeLayout>
+</android.support.constraint.ConstraintLayout>

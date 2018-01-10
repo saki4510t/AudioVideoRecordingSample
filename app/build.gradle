@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    compileSdkVersion 27
+    buildToolsVersion "26.0.2"
 
     defaultConfig {
         applicationId "com.serenegiant.audiovideosample"
         minSdkVersion 18
-        targetSdkVersion 21
+        targetSdkVersion 27
 		versionCode 5
 		versionName "1.4"
     }
@@ -19,11 +19,12 @@ android {
         }
     }
 	compileOptions {
-		sourceCompatibility JavaVersion.VERSION_1_7
-		targetCompatibility JavaVersion.VERSION_1_7
+		sourceCompatibility JavaVersion.VERSION_1_8
+		targetCompatibility JavaVersion.VERSION_1_8
 	}
 }
 
 dependencies {
-	compile 'com.android.support:support-v4:23.2.0'
+	compile 'com.android.support:support-v4:27.0.2'
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
 }

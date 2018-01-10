@@ -50,7 +50,6 @@ public class CameraFragment extends Fragment {
 	/**
 	 * for scale mode display
 	 */
-	private TextView mScaleModeView;
 	/**
 	 * button for start/stop recording
 	 */
@@ -59,6 +58,7 @@ public class CameraFragment extends Fragment {
 	 * muxer for audio/video recording
 	 */
 	private MediaMuxerWrapper mMuxer;
+	private AspectFrameLayout layout;
 
 	public CameraFragment() {
 		// need default constructor
@@ -67,13 +67,13 @@ public class CameraFragment extends Fragment {
 	@Override
 	public View onCreateView(final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
 		final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-		mCameraView = (CameraGLView)rootView.findViewById(R.id.cameraView);
+		mCameraView = rootView.findViewById(R.id.cameraView);
 		mCameraView.setVideoSize(1280, 720);
 		mCameraView.setOnClickListener(mOnClickListener);
-		mScaleModeView = (TextView)rootView.findViewById(R.id.scalemode_textview);
-		updateScaleModeText();
-		mRecordButton = (ImageButton)rootView.findViewById(R.id.record_button);
+		mRecordButton = rootView.findViewById(R.id.record_button);
 		mRecordButton.setOnClickListener(mOnClickListener);
+		layout = rootView.findViewById(R.id.cameraPreview_afl);
+		layout.setAspectRatio((double) mCameraView.getVideoHeight() / mCameraView.getVideoWidth());
 		return rootView;
 	}
 
@@ -100,9 +100,6 @@ public class CameraFragment extends Fragment {
 		public void onClick(final View view) {
 			switch (view.getId()) {
 			case R.id.cameraView:
-				final int scale_mode = (mCameraView.getScaleMode() + 1) % 4;
-				mCameraView.setScaleMode(scale_mode);
-				updateScaleModeText();
 				break;
 			case R.id.record_button:
 				if (mMuxer == null)
@@ -114,15 +111,6 @@ public class CameraFragment extends Fragment {
 		}
 	};
 
-	private void updateScaleModeText() {
-		final int scale_mode = mCameraView.getScaleMode();
-		mScaleModeView.setText(
-			scale_mode == 0 ? "scale to fit"
-			: (scale_mode == 1 ? "keep aspect(viewport)"
-			: (scale_mode == 2 ? "keep aspect(matrix)"
-			: (scale_mode == 3 ? "keep aspect(crop center)" : ""))));
-	}
-
 	/**
 	 * start resorcing
 	 * This is a sample project and call this on UI thread to avoid being complicated
@@ -133,7 +121,7 @@ public class CameraFragment extends Fragment {
 		if (DEBUG) Log.v(TAG, "startRecording:");
 		try {
 			mRecordButton.setColorFilter(0xffff0000);	// turn red
-			mMuxer = new MediaMuxerWrapper(".mp4");	// if you record audio only, ".m4a" is also OK.
+			mMuxer = new MediaMuxerWrapper(getActivity().getExternalFilesDir(null).getAbsolutePath() +"/ttt.mp4");	// if you record audio only, ".m4a" is also OK.
 			if (true) {
 				// for video capturing
 				new MediaVideoEncoder(mMuxer, mMediaEncoderListener, mCameraView.getVideoWidth(), mCameraView.getVideoHeight());

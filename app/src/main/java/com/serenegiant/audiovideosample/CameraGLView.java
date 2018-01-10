@@ -61,17 +61,11 @@ public final class CameraGLView extends GLSurfaceView {
 
 	private static final int CAMERA_ID = 0;
 
-	private static final int SCALE_STRETCH_FIT = 0;
-	private static final int SCALE_KEEP_ASPECT_VIEWPORT = 1;
-	private static final int SCALE_KEEP_ASPECT = 2;
-	private static final int SCALE_CROP_CENTER = 3;
-
 	private final CameraSurfaceRenderer mRenderer;
 	private boolean mHasSurface;
 	private CameraHandler mCameraHandler = null;
 	private int mVideoWidth, mVideoHeight;
 	private int mRotation;
-	private int mScaleMode = SCALE_STRETCH_FIT;
 
 	public CameraGLView(final Context context) {
 		this(context, null, 0);
@@ -112,22 +106,6 @@ public final class CameraGLView extends GLSurfaceView {
 			mCameraHandler.stopPreview(false);
 		}
 		super.onPause();
-	}
-
-	public void setScaleMode(final int mode) {
-		if (mScaleMode != mode) {
-			mScaleMode = mode;
-			queueEvent(new Runnable() {
-				@Override
-				public void run() {
-					mRenderer.updateViewport();
-				}
-			});
-		}
-	}
-
-	public int getScaleMode() {
-		return mScaleMode;
 	}
 
 	public void setVideoSize(final int width, final int height) {
@@ -285,47 +263,7 @@ public final class CameraGLView extends GLSurfaceView {
 				Matrix.setIdentityM(mMvpMatrix, 0);
 				final double view_aspect = view_width / (double)view_height;
 				Log.i(TAG, String.format("view(%d,%d)%f,video(%1.0f,%1.0f)", view_width, view_height, view_aspect, video_width, video_height));
-				switch (parent.mScaleMode) {
-				case SCALE_STRETCH_FIT:
-					break;
-				case SCALE_KEEP_ASPECT_VIEWPORT:
-				{
-					final double req = video_width / video_height;
-					int x, y;
-					int width, height;
-					if (view_aspect > req) {
-						// if view is wider than camera image, calc width of drawing area based on view height
-						y = 0;
-						height = view_height;
-						width = (int)(req * view_height);
-						x = (view_width - width) / 2;
-					} else {
-						// if view is higher than camera image, calc height of drawing area based on view width
-						x = 0;
-						width = view_width;
-						height = (int)(view_width / req);
-						y = (view_height - height) / 2;
-					}
-					// set viewport to draw keeping aspect ration of camera image
-					if (DEBUG) Log.v(TAG, String.format("xy(%d,%d),size(%d,%d)", x, y, width, height));
-					GLES20.glViewport(x, y, width, height);
-					break;
-				}
-				case SCALE_KEEP_ASPECT:
-				case SCALE_CROP_CENTER:
-				{
-					final double scale_x = view_width / video_width;
-					final double scale_y = view_height / video_height;
-					final double scale = (parent.mScaleMode == SCALE_CROP_CENTER
-						? Math.max(scale_x,  scale_y) : Math.min(scale_x, scale_y));
-					final double width = scale * video_width;
-					final double height = scale * video_height;
-					Log.v(TAG, String.format("size(%1.0f,%1.0f),scale(%f,%f),mat(%f,%f)",
-						width, height, scale_x, scale_y, width / view_width, height / view_height));
-					Matrix.scaleM(mMvpMatrix, 0, (float)(width / view_width), (float)(height / view_height), 1.0f);
-					break;
-				}
-				}
+
 				if (mDrawer != null)
 					mDrawer.setMatrix(mMvpMatrix, 0);
 			}
@@ -487,8 +425,16 @@ public final class CameraGLView extends GLSurfaceView {
 			if ((parent != null) && (mCamera == null)) {
 				// This is a sample project so just use 0 as camera ID.
 				// it is better to selecting camera is available
-				try {
-					mCamera = Camera.open(CAMERA_ID);
+				try {// Try to find a front-facing camera (e.g. for videoconferencing).
+					Camera.CameraInfo info = new Camera.CameraInfo();
+					int numCameras = Camera.getNumberOfCameras();
+					for (int i = 0; i < numCameras; i++) {
+						Camera.getCameraInfo(i, info);
+						if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+							mCamera = Camera.open(i);
+							break;
+						}
+					}
 					final Camera.Parameters params = mCamera.getParameters();
 					final List<String> focusModes = params.getSupportedFocusModes();
 					if (focusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
