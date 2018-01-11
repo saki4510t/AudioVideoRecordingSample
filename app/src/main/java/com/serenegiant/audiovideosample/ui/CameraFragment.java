@@ -1,4 +1,4 @@
-package com.serenegiant.audiovideosample;
+package com.serenegiant.audiovideosample.ui;
 /*
  * AudioVideoRecordingSample
  * Sample project to cature audio and video from internal mic/camera and save as MPEG4 file.
@@ -22,6 +22,7 @@ package com.serenegiant.audiovideosample;
  * All files in the folder are under this Apache License, Version 2.0.
 */
 
+import java.io.File;
 import java.io.IOException;
 
 import android.app.Fragment;
@@ -31,13 +32,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.TextView;
 
-import com.serenegiant.encoder.MediaAudioEncoder;
-import com.serenegiant.encoder.MediaEncoder;
-import com.serenegiant.encoder.MediaMuxerWrapper;
-import com.serenegiant.encoder.MediaVideoEncoder;
+import com.serenegiant.audiovideosample.R;
+import com.serenegiant.audiovideosample.encoder.MediaAudioEncoder;
+import com.serenegiant.audiovideosample.encoder.MediaEncoder;
+import com.serenegiant.audiovideosample.encoder.MediaMuxerWrapper;
+import com.serenegiant.audiovideosample.encoder.MediaVideoEncoder;
 
 public class CameraFragment extends Fragment {
 	private static final boolean DEBUG = false;	// TODO set false on release
@@ -50,15 +52,15 @@ public class CameraFragment extends Fragment {
 	/**
 	 * for scale mode display
 	 */
-	private TextView mScaleModeView;
 	/**
 	 * button for start/stop recording
 	 */
-	private ImageButton mRecordButton;
+	private Button mRecordButton;
 	/**
 	 * muxer for audio/video recording
 	 */
 	private MediaMuxerWrapper mMuxer;
+	private AspectFrameLayout layout;
 
 	public CameraFragment() {
 		// need default constructor
@@ -67,13 +69,13 @@ public class CameraFragment extends Fragment {
 	@Override
 	public View onCreateView(final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
 		final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-		mCameraView = (CameraGLView)rootView.findViewById(R.id.cameraView);
+		mCameraView = rootView.findViewById(R.id.cameraView);
 		mCameraView.setVideoSize(1280, 720);
 		mCameraView.setOnClickListener(mOnClickListener);
-		mScaleModeView = (TextView)rootView.findViewById(R.id.scalemode_textview);
-		updateScaleModeText();
-		mRecordButton = (ImageButton)rootView.findViewById(R.id.record_button);
+		mRecordButton = rootView.findViewById(R.id.record_button);
 		mRecordButton.setOnClickListener(mOnClickListener);
+		layout = rootView.findViewById(R.id.cameraPreview_afl);
+		layout.setAspectRatio((double) mCameraView.getVideoHeight() / mCameraView.getVideoWidth());
 		return rootView;
 	}
 
@@ -100,9 +102,6 @@ public class CameraFragment extends Fragment {
 		public void onClick(final View view) {
 			switch (view.getId()) {
 			case R.id.cameraView:
-				final int scale_mode = (mCameraView.getScaleMode() + 1) % 4;
-				mCameraView.setScaleMode(scale_mode);
-				updateScaleModeText();
 				break;
 			case R.id.record_button:
 				if (mMuxer == null)
@@ -114,15 +113,6 @@ public class CameraFragment extends Fragment {
 		}
 	};
 
-	private void updateScaleModeText() {
-		final int scale_mode = mCameraView.getScaleMode();
-		mScaleModeView.setText(
-			scale_mode == 0 ? "scale to fit"
-			: (scale_mode == 1 ? "keep aspect(viewport)"
-			: (scale_mode == 2 ? "keep aspect(matrix)"
-			: (scale_mode == 3 ? "keep aspect(crop center)" : ""))));
-	}
-
 	/**
 	 * start resorcing
 	 * This is a sample project and call this on UI thread to avoid being complicated
@@ -132,8 +122,12 @@ public class CameraFragment extends Fragment {
 	private void startRecording() {
 		if (DEBUG) Log.v(TAG, "startRecording:");
 		try {
-			mRecordButton.setColorFilter(0xffff0000);	// turn red
-			mMuxer = new MediaMuxerWrapper(".mp4");	// if you record audio only, ".m4a" is also OK.
+			mRecordButton.setText(R.string.stop);	// turn red
+			String outputPath = null;
+			File dir = getActivity().getExternalFilesDir(null);
+			if(dir != null)
+				outputPath = dir.getAbsolutePath() +"/output.mp4";
+			mMuxer = new MediaMuxerWrapper(outputPath);	// if you record audio only, ".m4a" is also OK.
 			if (true) {
 				// for video capturing
 				new MediaVideoEncoder(mMuxer, mMediaEncoderListener, mCameraView.getVideoWidth(), mCameraView.getVideoHeight());
@@ -145,7 +139,6 @@ public class CameraFragment extends Fragment {
 			mMuxer.prepare();
 			mMuxer.startRecording();
 		} catch (final IOException e) {
-			mRecordButton.setColorFilter(0);
 			Log.e(TAG, "startCapture:", e);
 		}
 	}
@@ -155,7 +148,7 @@ public class CameraFragment extends Fragment {
 	 */
 	private void stopRecording() {
 		if (DEBUG) Log.v(TAG, "stopRecording:mMuxer=" + mMuxer);
-		mRecordButton.setColorFilter(0);	// return to default color
+		mRecordButton.setText(R.string.record);	// return to default color
 		if (mMuxer != null) {
 			mMuxer.stopRecording();
 			mMuxer = null;
