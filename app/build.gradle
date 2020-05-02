@@ -38,4 +38,6 @@ dependencies {
 
 	implementation "androidx.appcompat:appcompat:${androidXVersion}"
 	implementation "androidx.legacy:legacy-support-v4:${androidXLegacyV4}"
+
+	implementation "com.serenegiant:common:${commonLibVersion}"
 }

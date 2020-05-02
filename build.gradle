@@ -16,7 +16,12 @@ allprojects {
     	google()
 //		maven { url 'https://maven.google.com' }
         jcenter()
+		maven { url 'http://raw.github.com/saki4510t/libcommon/master/repository/' }
     }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }
 
 ext {
@@ -42,6 +47,8 @@ ext {
 	androidXLeanback = '1.0.0'
 	androidXKtx = '1.2.0'
 	androidXKtxLifecycle = '2.2.0'
+
+	commonLibVersion = '7.9.1'
 
     versionCodeNum = 5
     versionNameString = '1.4'
