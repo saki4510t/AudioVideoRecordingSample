@@ -15,6 +15,9 @@ android {
 		targetSdkVersion versionTarget
 		versionCode versionCodeNum
 		versionName versionNameString
+
+		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+		consumerProguardFiles 'consumer-rules.pro'
     }
 
     buildTypes {
@@ -23,15 +26,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
-	compileOptions {
-		sourceCompatibility JavaVersion.VERSION_1_7
-		targetCompatibility JavaVersion.VERSION_1_7
-	}
+
 }
 
 dependencies {
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-	implementation 'com.android.support:support-v4:28.0.0'
-	implementation 'com.android.support:appcompat-v7:28.0.0'
+	testImplementation 'junit:junit:4.12'
+	androidTestImplementation 'androidx.test:runner:1.2.0'
+	androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+	implementation "androidx.appcompat:appcompat:${androidXVersion}"
+	implementation "androidx.legacy:legacy-support-v4:${androidXLegacyV4}"
 }

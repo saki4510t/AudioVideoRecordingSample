@@ -27,6 +27,22 @@ ext {
    	versionCompiler = 29
    	versionTarget = 28
 
+	// variable that can be referenced to keep support libs consistent
+	supportLibVersion = '1.0.0'
+	androidXVersion = '1.1.0'
+	androidXLegacyV4 = '1.0.0'
+	androidXExif = '1.2.0'
+	androidXLifecycle = '2.2.0'
+	androidXLifecycleExt = '2.2.0'
+	androidXMultiDex = '2.0.1'
+	androidXMaterial = '1.1.0-rc02'
+	androidXRecyclerview = '1.1.0-beta05'
+	androidXPreference = '1.1.1'
+	androidXConstraint = '1.1.3'
+	androidXLeanback = '1.0.0'
+	androidXKtx = '1.2.0'
+	androidXKtxLifecycle = '2.2.0'
+
     versionCodeNum = 5
     versionNameString = '1.4'
 }
