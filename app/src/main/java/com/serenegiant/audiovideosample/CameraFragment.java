@@ -71,9 +71,9 @@ public class CameraFragment extends Fragment {
 		mCameraView = (CameraGLView)rootView.findViewById(R.id.cameraView);
 		mCameraView.setVideoSize(1280, 720);
 		mCameraView.setOnClickListener(mOnClickListener);
-		mScaleModeView = (TextView)rootView.findViewById(R.id.scalemode_textview);
+		mScaleModeView = rootView.findViewById(R.id.scalemode_textview);
 		updateScaleModeText();
-		mRecordButton = (ImageButton)rootView.findViewById(R.id.record_button);
+		mRecordButton = rootView.findViewById(R.id.record_button);
 		mRecordButton.setOnClickListener(mOnClickListener);
 		return rootView;
 	}
