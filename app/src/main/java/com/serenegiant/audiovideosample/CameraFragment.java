@@ -61,6 +61,7 @@ public class CameraFragment extends Fragment {
 	private MediaMuxerWrapper mMuxer;
 
 	public CameraFragment() {
+		super();
 		// need default constructor
 	}
 
