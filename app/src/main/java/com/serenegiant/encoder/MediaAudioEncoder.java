@@ -116,6 +116,7 @@ public class MediaAudioEncoder extends MediaEncoder {
     	@Override
     	public void run() {
     		android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+    		int cnt = 0;
     		try {
 				final int min_buffer_size = AudioRecord.getMinBufferSize(
 					SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
@@ -155,6 +156,7 @@ public class MediaAudioEncoder extends MediaEncoder {
 										buf.flip();
 					    				encode(buf, readBytes, getPTSUs());
 					    				frameAvailableSoon();
+					    				cnt++;
 					    			}
 					    		}
 			    				frameAvailableSoon();
@@ -171,6 +173,25 @@ public class MediaAudioEncoder extends MediaEncoder {
     		} catch (final Exception e) {
     			Log.e(TAG, "AudioThread#run", e);
     		}
+			if (cnt == 0) {
+				final ByteBuffer buf = ByteBuffer.allocateDirect(SAMPLES_PER_FRAME);
+				for (int i = 0; mIsCapturing && (i < 5); i++) {
+					buf.position(SAMPLES_PER_FRAME);
+					buf.flip();
+					try {
+						encode(buf, SAMPLES_PER_FRAME, getPTSUs());
+						frameAvailableSoon();
+					} catch (final Exception e) {
+						break;
+					}
+					synchronized(this) {
+						try {
+							wait(50);
+						} catch (final InterruptedException e) {
+						}
+					}
+				}
+			}
 			if (DEBUG) Log.v(TAG, "AudioThread:finished");
     	}
     }

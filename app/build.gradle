@@ -1,15 +1,20 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+	compileSdkVersion versionCompiler
+	buildToolsVersion versionBuildTool
+
+	compileOptions {
+		sourceCompatibility javaSourceCompatibility
+		targetCompatibility javaTargetCompatibility
+	}
 
     defaultConfig {
         applicationId "com.serenegiant.audiovideosample"
         minSdkVersion 18
-        targetSdkVersion 21
-		versionCode 5
-		versionName "1.4"
+		targetSdkVersion versionTarget
+		versionCode versionCodeNum
+		versionName versionNameString
     }
 
     buildTypes {
@@ -25,5 +30,7 @@ android {
 }
 
 dependencies {
-	compile 'com.android.support:support-v4:23.2.0'
+	implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+	implementation 'com.android.support:support-v4:28.0.0'
 }
