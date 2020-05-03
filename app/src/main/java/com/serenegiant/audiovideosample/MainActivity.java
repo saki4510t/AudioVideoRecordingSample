@@ -24,6 +24,7 @@ package com.serenegiant.audiovideosample;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -93,9 +94,7 @@ public class MainActivity extends AppCompatActivity
 
 	protected void internalOnResume() {
 		if (DEBUG) Log.v(TAG, "internalOnResume:");
-		checkPermissionWriteExternalStorage();
-		checkPermissionCamera();
-		checkPermissionAudio();
+		checkPermission();
 	}
 
 	protected void internalOnPause() {
@@ -122,34 +121,21 @@ public class MainActivity extends AppCompatActivity
 		return super.onOptionsItemSelected(item);
 	}
 
-//--------------------------------------------------------------------------------
-	private static final int ID_PERMISSION_REASON_AUDIO = R.string.permission_audio_recording_reason;
-	private static final int ID_PERMISSION_REQUEST_AUDIO = R.string.permission_audio_recording_request;
-	private static final int ID_PERMISSION_REASON_NETWORK = R.string.permission_network_reason;
-	private static final int ID_PERMISSION_REQUEST_NETWORK = R.string.permission_network_request;
-	private static final int ID_PERMISSION_REASON_EXT_STORAGE = R.string.permission_ext_storage_reason;
-	private static final int ID_PERMISSION_REQUEST_EXT_STORAGE = R.string.permission_ext_storage_request;
-	private static final int ID_PERMISSION_REASON_CAMERA = R.string.permission_camera_reason;
-	private static final int ID_PERMISSION_REQUEST_CAMERA = R.string.permission_camera_request;
-	private static final int ID_PERMISSION_REQUEST_HARDWARE_ID = R.string.permission_hardware_id_request;
-	private static final int ID_PERMISSION_REASON_LOCATION = R.string.permission_location_reason;
-	private static final int ID_PERMISSION_REQUEST_LOCATION = R.string.permission_location_request;
+	@Override
+	public void onRequestPermissionsResult(final int requestCode,
+		@NonNull final String[] permissions, @NonNull final int[] grantResults) {
 
-	/** request code for WRITE_EXTERNAL_STORAGE permission */
-	private static final int REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE = 0x1234;
-	/** request code for RECORD_AUDIO permission */
-	private static final int REQUEST_PERMISSION_AUDIO_RECORDING = 0x2345;
-	/** request code for CAMERA permission */
-	private static final int REQUEST_PERMISSION_CAMERA = 0x3456;
-	/** request code for INTERNET permission */
-	private static final int REQUEST_PERMISSION_NETWORK = 0x4567;
-	/** request code for READ_PHONE_STATE permission */
-	private static final int REQUEST_PERMISSION_HARDWARE_ID = 0x5678;
-    /** request code for ACCESS_FINE_LOCATION permission */
-	private static final int REQUEST_PERMISSION_LOCATION = 0x6789;
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);    // 何もしてないけど一応呼んどく
+		final int n = Math.min(permissions.length, grantResults.length);
+		for (int i = 0; i < n; i++) {
+			checkPermissionResult(requestCode, permissions[i],
+				grantResults[i] == PackageManager.PERMISSION_GRANTED);
+		}
+		checkPermission();
+	}
 
 	/**
-	 * callback listener from MessageDialogFragment
+	 * callback listener from MessageDialogFragmentV4
 	 *
 	 * @param dialog
 	 * @param requestCode
@@ -184,6 +170,38 @@ public class MainActivity extends AppCompatActivity
 			break;
 		}
 	}
+
+//--------------------------------------------------------------------------------
+	private boolean checkPermission() {
+		return checkPermissionCamera()
+			&& checkPermissionAudio()
+			&& checkPermissionWriteExternalStorage();
+	}
+
+	private static final int ID_PERMISSION_REASON_AUDIO = R.string.permission_audio_recording_reason;
+	private static final int ID_PERMISSION_REQUEST_AUDIO = R.string.permission_audio_recording_request;
+	private static final int ID_PERMISSION_REASON_NETWORK = R.string.permission_network_reason;
+	private static final int ID_PERMISSION_REQUEST_NETWORK = R.string.permission_network_request;
+	private static final int ID_PERMISSION_REASON_EXT_STORAGE = R.string.permission_ext_storage_reason;
+	private static final int ID_PERMISSION_REQUEST_EXT_STORAGE = R.string.permission_ext_storage_request;
+	private static final int ID_PERMISSION_REASON_CAMERA = R.string.permission_camera_reason;
+	private static final int ID_PERMISSION_REQUEST_CAMERA = R.string.permission_camera_request;
+	private static final int ID_PERMISSION_REQUEST_HARDWARE_ID = R.string.permission_hardware_id_request;
+	private static final int ID_PERMISSION_REASON_LOCATION = R.string.permission_location_reason;
+	private static final int ID_PERMISSION_REQUEST_LOCATION = R.string.permission_location_request;
+
+	/** request code for WRITE_EXTERNAL_STORAGE permission */
+	private static final int REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE = 0x1234;
+	/** request code for RECORD_AUDIO permission */
+	private static final int REQUEST_PERMISSION_AUDIO_RECORDING = 0x2345;
+	/** request code for CAMERA permission */
+	private static final int REQUEST_PERMISSION_CAMERA = 0x3456;
+	/** request code for INTERNET permission */
+	private static final int REQUEST_PERMISSION_NETWORK = 0x4567;
+	/** request code for READ_PHONE_STATE permission */
+	private static final int REQUEST_PERMISSION_HARDWARE_ID = 0x5678;
+    /** request code for ACCESS_FINE_LOCATION permission */
+	private static final int REQUEST_PERMISSION_LOCATION = 0x6789;
 
 	/**
 	 * パーミッション処理の実態
