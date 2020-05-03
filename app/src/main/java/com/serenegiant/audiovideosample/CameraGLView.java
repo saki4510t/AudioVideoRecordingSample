@@ -49,7 +49,7 @@ import android.view.SurfaceHolder;
 import android.view.WindowManager;
 
 import com.serenegiant.encoder.MediaVideoEncoder;
-import com.serenegiant.glutils.GLDrawer2D;
+import com.serenegiant.glutilsOld.GLDrawer2D;
 
 /**
  * Sub class of GLSurfaceView to display camera preview and write video frame to capturing surface

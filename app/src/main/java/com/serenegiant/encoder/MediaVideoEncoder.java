@@ -32,7 +32,7 @@ import android.opengl.EGLContext;
 import android.util.Log;
 import android.view.Surface;
 
-import com.serenegiant.glutils.RenderHandler;
+import com.serenegiant.glutilsOld.RenderHandler;
 
 public class MediaVideoEncoder extends MediaEncoder {
 	private static final boolean DEBUG = false;	// TODO set false on release
