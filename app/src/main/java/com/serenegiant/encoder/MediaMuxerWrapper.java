@@ -45,8 +45,8 @@ public class MediaMuxerWrapper {
 
 	private String mOutputPath;
 	private final MediaMuxer mMediaMuxer;	// API >= 18
-	private int mEncoderCount, mStatredCount;
-	private boolean mIsStarted;
+	private volatile int  mEncoderCount, mStatredCount;
+	private volatile boolean mIsStarted;
 	private MediaEncoder mVideoEncoder, mAudioEncoder;
 
 	/**
@@ -167,8 +167,12 @@ public class MediaMuxerWrapper {
 	 * @param bufferInfo
 	 */
 	/*package*/ synchronized void writeSampleData(final int trackIndex, final ByteBuffer byteBuf, final MediaCodec.BufferInfo bufferInfo) {
-		if (mStatredCount > 0)
+		try {
 			mMediaMuxer.writeSampleData(trackIndex, byteBuf, bufferInfo);
+		} catch (final Exception e) {
+			stopRecording();
+			Log.e(TAG, "writeSampleData fail:" +  trackIndex + e);
+		}
 	}
 
 //**********************************************************************
