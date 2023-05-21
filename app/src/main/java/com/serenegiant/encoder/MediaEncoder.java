@@ -31,7 +31,7 @@ import android.media.MediaFormat;
 import android.util.Log;
 
 public abstract class MediaEncoder implements Runnable {
-	private static final boolean DEBUG = false;	// TODO set false on release
+	private static final boolean DEBUG = true;	// TODO set false on release
 	private static final String TAG = "MediaEncoder";
 
 	protected static final int TIMEOUT_USEC = 10000;	// 10[msec]

@@ -40,7 +40,7 @@ import com.serenegiant.encoder.MediaVideoEncoder;
 import java.io.IOException;
 
 public class CameraFragment extends Fragment {
-	private static final boolean DEBUG = false;	// TODO set false on release
+	private static final boolean DEBUG = true;	// TODO set false on release
 	private static final String TAG = "CameraFragment";
 
 	/**
